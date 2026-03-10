@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pdfly.ai — Text to PDF, Free & Fast</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --y: #FFD600;
+      --yd: #E6C000;
+      --yl: #FFF59D;
+      --b: #080808;
+      --b1: #111111;
+      --b2: #181818;
+      --b3: #222222;
+      --b4: #2E2E2E;
+      --w: #FFFFFF;
+      --g: #777777;
+      --g2: #AAAAAA;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--b);color:var(--w);font-family:'DM Sans',sans-serif;overflow-x:hidden;}
+
+    /* ── OVERLAY PAGES ── */
+    .overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;}
+    .overlay.active{display:flex;}
+
+    .modal{background:var(--b1);border:1px solid var(--b4);border-radius:20px;width:100%;max-width:440px;padding:40px;position:relative;animation:popIn .35s cubic-bezier(.34,1.56,.64,1);}
+    @keyframes popIn{from{transform:scale(.88);opacity:0;}to{transform:scale(1);opacity:1;}}
+
+    .modal-close{position:absolute;top:16px;right:16px;background:var(--b3);border:none;color:var(--g2);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.2s;}
+    .modal-close:hover{background:var(--b4);color:var(--w);}
+
+    .modal-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+    .modal-logo .icon{width:38px;height:38px;background:var(--y);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:900;color:var(--b);font-size:17px;}
+    .modal-logo span{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;}
+    .modal-logo span em{color:var(--y);font-style:normal;}
+
+    .modal h2{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin-bottom:6px;}
+    .modal p.sub{color:var(--g);font-size:14px;margin-bottom:28px;}
+
+    .form-group{margin-bottom:16px;}
+    .form-group label{display:block;font-size:13px;font-weight:600;color:var(--g2);margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase;}
+    .form-group input{width:100%;background:var(--b2);border:1px solid var(--b4);border-radius:10px;padding:13px 16px;color:var(--w);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:.2s;}
+    .form-group input:focus{border-color:rgba(255,214,0,.5);box-shadow:0 0 0 3px rgba(255,214,0,.08);}
+    .form-group input::placeholder{color:#444;}
+
+    .btn-primary{width:100%;background:var(--y);color:var(--b);border:none;padding:14px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;margin-top:4px;}
+    .btn-primary:hover{background:var(--yl);transform:translateY(-1px);box-shadow:0 8px 24px rgba(255,214,0,.3);}
+
+    .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--g);font-size:13px;}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--b4);}
+
+    .btn-google{width:100%;background:var(--b2);border:1px solid var(--b4);color:var(--w);padding:13px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:.2s;}
+    .btn-google:hover{background:var(--b3);border-color:var(--b4);}
+    .btn-google svg{width:18px;height:18px;}
+
+    .modal-switch{text-align:center;margin-top:20px;font-size:14px;color:var(--g);}
+    .modal-switch a{color:var(--y);text-decoration:none;font-weight:600;}
+    .modal-switch a:hover{text-decoration:underline;}
+
+    .forgot-link{text-align:right;margin-top:-8px;margin-bottom:16px;}
+    .forgot-link a{color:var(--g);font-size:13px;text-decoration:none;transition:.2s;}
+    .forgot-link a:hover{color:var(--y);}
+
+    /* ── PAYMENT MODAL ── */
+    .payment-plan{background:var(--b2);border:1px solid var(--b4);border-radius:14px;padding:22px;margin-bottom:20px;position:relative;overflow:hidden;}
+    .payment-plan::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--y);}
+    .plan-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+    .plan-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;}
+    .plan-price{font-family:'Syne',sans-serif;font-size:28px;font-weight:900;color:var(--y);}
+    .plan-price span{font-size:14px;color:var(--g);font-family:'DM Sans',sans-serif;font-weight:400;}
+    .plan-features{list-style:none;}
+    .plan-features li{font-size:13px;color:var(--g2);padding:4px 0;display:flex;align-items:center;gap:8px;}
+    .plan-features li::before{content:'✦';color:var(--y);font-size:10px;}
+
+    .card-field{background:var(--b2);border:1px solid var(--b4);border-radius:10px;padding:14px 16px;margin-bottom:12px;color:var(--g);font-size:14px;display:flex;align-items:center;justify-content:space-between;}
+    .card-field span{color:var(--g2);}
+    .card-icons{display:flex;gap:6px;}
+    .card-icon{background:var(--b3);border:1px solid var(--b4);border-radius:4px;padding:3px 8px;font-size:11px;font-weight:700;color:var(--g2);}
+
+    .secure-note{display:flex;align-items:center;gap:8px;color:var(--g);font-size:12px;margin-top:12px;justify-content:center;}
+    .secure-note svg{width:14px;height:14px;color:var(--y);}
+
+    /* ── DASHBOARD ── */
+    #dashboardPage{display:none;min-height:100vh;}
+    #dashboardPage.active{display:block;}
+
+    .dash-nav{position:sticky;top:0;z-index:100;background:rgba(8,8,8,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--b3);padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:64px;}
+    .dash-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+    .dash-logo .icon{width:34px;height:34px;background:var(--y);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:900;color:var(--b);font-size:15px;}
+    .dash-logo span{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--w);}
+    .dash-logo span em{color:var(--y);font-style:normal;}
+
+    .dash-user{display:flex;align-items:center;gap:12px;}
+    .user-avatar{width:36px;height:36px;background:var(--y);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--b);font-size:14px;}
+    .user-name{font-size:14px;font-weight:500;color:var(--g2);}
+    .btn-logout{background:var(--b3);border:1px solid var(--b4);color:var(--g2);padding:7px 14px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:.2s;}
+    .btn-logout:hover{color:var(--w);border-color:var(--b4);}
+
+    .dash-body{max-width:1000px;margin:0 auto;padding:50px 5%;}
+
+    .dash-greeting{margin-bottom:40px;}
+    .dash-greeting h1{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,40px);font-weight:800;letter-spacing:-1px;margin-bottom:6px;}
+    .dash-greeting p{color:var(--g);font-size:15px;}
+
+    .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:40px;}
+    .stat-card{background:var(--b1);border:1px solid var(--b3);border-radius:14px;padding:24px;position:relative;overflow:hidden;transition:.3s;}
+    .stat-card:hover{border-color:rgba(255,214,0,.25);transform:translateY(-2px);}
+    .stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--y);transform:scaleX(0);transform-origin:left;transition:.3s;}
+    .stat-card:hover::after{transform:scaleX(1);}
+    .stat-label{font-size:12px;font-weight:600;color:var(--g);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
+    .stat-value{font-family:'Syne',sans-serif;font-size:36px;font-weight:900;color:var(--w);}
+    .stat-value span{color:var(--y);}
+    .stat-note{font-size:12px;color:var(--g);margin-top:4px;}
+
+    .progress-bar-wrap{background:var(--b3);border-radius:100px;height:6px;margin-top:10px;overflow:hidden;}
+    .progress-bar{height:100%;background:var(--y);border-radius:100px;transition:width .5s ease;}
+
+    /* ── CONVERTER in DASHBOARD ── */
+    .dash-converter{background:var(--b1);border:1px solid var(--b3);border-radius:16px;overflow:hidden;margin-bottom:32px;}
+    .dash-conv-header{background:var(--b2);border-bottom:1px solid var(--b3);padding:16px 22px;display:flex;align-items:center;justify-content:space-between;}
+    .dash-conv-header h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;}
+    .badge-free{background:rgba(255,214,0,.12);border:1px solid rgba(255,214,0,.25);color:var(--y);padding:4px 10px;border-radius:100px;font-size:12px;font-weight:600;}
+
+    #dashTextarea{width:100%;min-height:240px;background:var(--b1);border:none;outline:none;color:var(--w);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.7;padding:20px 22px;resize:vertical;}
+    #dashTextarea::placeholder{color:#333;}
+
+    .dash-conv-footer{background:var(--b2);border-top:1px solid var(--b3);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+    .format-chips{display:flex;gap:6px;flex-wrap:wrap;}
+    .chip{background:rgba(255,214,0,.08);border:1px solid rgba(255,214,0,.18);color:var(--y);padding:3px 9px;border-radius:5px;font-size:11px;font-family:monospace;}
+
+    .btn-dl{background:var(--y);color:var(--b);border:none;padding:11px 24px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;transition:.2s;}
+    .btn-dl:hover{background:var(--yl);transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,214,0,.3);}
+    .btn-dl:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+    /* locked state */
+    .locked-overlay{display:none;position:absolute;inset:0;background:rgba(8,8,8,.88);backdrop-filter:blur(4px);border-radius:16px;align-items:center;justify-content:center;flex-direction:column;gap:16px;text-align:center;padding:30px;z-index:10;}
+    .locked-overlay.show{display:flex;}
+    .lock-icon{font-size:40px;margin-bottom:4px;}
+    .locked-overlay h3{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;}
+    .locked-overlay p{color:var(--g);font-size:14px;max-width:280px;}
+    .btn-unlock{background:var(--y);color:var(--b);border:none;padding:12px 28px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;}
+    .btn-unlock:hover{background:var(--yl);}
+
+    /* history */
+    .history-section h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:16px;}
+    .history-list{display:flex;flex-direction:column;gap:10px;}
+    .history-item{background:var(--b1);border:1px solid var(--b3);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:.2s;}
+    .history-item:hover{border-color:rgba(255,214,0,.2);}
+    .hist-info{display:flex;align-items:center;gap:12px;}
+    .hist-icon{width:36px;height:36px;background:rgba(255,214,0,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+    .hist-name{font-size:14px;font-weight:600;}
+    .hist-date{font-size:12px;color:var(--g);}
+    .hist-dl{background:var(--b3);border:1px solid var(--b4);color:var(--g2);padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:.2s;font-family:'DM Sans',sans-serif;}
+    .hist-dl:hover{background:var(--y);color:var(--b);}
+
+    /* ── MAIN SITE ── */
+    #mainSite{}
+    nav{position:sticky;top:0;z-index:100;background:rgba(8,8,8,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--b3);padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:64px;}
+    .n-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+    .n-logo .icon{width:36px;height:36px;background:var(--y);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:900;color:var(--b);font-size:16px;}
+    .n-logo span{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--w);}
+    .n-logo span em{color:var(--y);font-style:normal;}
+    .n-links{display:flex;align-items:center;gap:28px;list-style:none;}
+    .n-links a{color:var(--g2);text-decoration:none;font-size:14px;font-weight:500;transition:.2s;}
+    .n-links a:hover{color:var(--y);}
+    .n-actions{display:flex;gap:10px;}
+    .btn-nav-login{background:transparent;border:1px solid var(--b4);color:var(--w);padding:8px 18px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:.2s;}
+    .btn-nav-login:hover{border-color:var(--y);color:var(--y);}
+    .btn-nav-join{background:var(--y);border:none;color:var(--b);padding:8px 18px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;}
+    .btn-nav-join:hover{background:var(--yl);transform:translateY(-1px);}
+
+    /* hero */
+    .hero{padding:90px 5% 60px;text-align:center;position:relative;overflow:hidden;}
+    .hero::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:700px;height:500px;background:radial-gradient(ellipse,rgba(255,214,0,.1) 0%,transparent 68%);pointer-events:none;}
+    .badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,214,0,.1);border:1px solid rgba(255,214,0,.25);color:var(--y);padding:6px 14px;border-radius:100px;font-size:13px;font-weight:500;margin-bottom:24px;animation:fadeUp .5s ease;}
+    h1.hero-title{font-family:'Syne',sans-serif;font-size:clamp(40px,7vw,80px);font-weight:900;letter-spacing:-3px;line-height:1;margin-bottom:20px;animation:fadeUp .6s ease;}
+    h1.hero-title em{color:var(--y);font-style:normal;position:relative;}
+    .hero-sub{color:var(--g);font-size:16px;max-width:480px;margin:0 auto 10px;animation:fadeUp .7s ease;}
+    .hero-supports{color:var(--g);font-size:13px;margin-bottom:44px;animation:fadeUp .8s ease;}
+    .hero-supports code{background:var(--b2);color:var(--y);padding:2px 7px;border-radius:4px;font-size:12px;border:1px solid var(--b3);}
+
+    /* converter */
+    .conv-wrap{max-width:800px;margin:0 auto;padding:0 5%;animation:fadeUp .9s ease;}
+    .conv-box{background:var(--b1);border:1px solid var(--b3);border-radius:18px;overflow:hidden;box-shadow:0 0 80px rgba(255,214,0,.06),0 24px 80px rgba(0,0,0,.5);transition:border-color .3s;}
+    .conv-box:focus-within{border-color:rgba(255,214,0,.35);}
+    .conv-top{background:var(--b2);border-bottom:1px solid var(--b3);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;}
+    .dots{display:flex;gap:6px;}
+    .dots span{width:12px;height:12px;border-radius:50%;}
+    .d1{background:#FF5F57;}.d2{background:#FFBD2E;}.d3{background:#28C840;}
+    .conv-label{font-size:12px;color:var(--g);font-weight:500;}
+    #charCt{font-size:12px;color:var(--g);}
+    #mainTextarea{width:100%;min-height:260px;background:var(--b1);border:none;outline:none;color:var(--w);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.7;padding:20px 24px;resize:vertical;}
+    #mainTextarea::placeholder{color:#333;}
+    .conv-bot{background:var(--b2);border-top:1px solid var(--b3);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+    .hint-chips{display:flex;gap:6px;flex-wrap:wrap;}
+    .hchip{background:rgba(255,214,0,.08);border:1px solid rgba(255,214,0,.18);color:var(--y);padding:4px 10px;border-radius:5px;font-size:12px;font-family:monospace;}
+
+    .btn-main-dl{background:var(--y);color:var(--b);border:none;padding:12px 28px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.2s;}
+    .btn-main-dl:hover{background:var(--yl);transform:translateY(-2px);box-shadow:0 8px 28px rgba(255,214,0,.35);}
+
+    /* pricing section */
+    .pricing{padding:80px 5%;max-width:1000px;margin:0 auto;text-align:center;}
+    .pricing h2{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:900;letter-spacing:-1.5px;margin-bottom:10px;}
+    .pricing .sub{color:var(--g);font-size:15px;margin-bottom:50px;}
+    .pricing-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;text-align:left;}
+    .price-card{background:var(--b1);border:1px solid var(--b3);border-radius:16px;padding:30px;position:relative;transition:.3s;}
+    .price-card:hover{border-color:rgba(255,214,0,.3);transform:translateY(-4px);}
+    .price-card.featured{border-color:var(--y);background:linear-gradient(135deg,rgba(255,214,0,.08) 0%,var(--b1) 100%);}
+    .featured-tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--y);color:var(--b);padding:4px 14px;border-radius:100px;font-size:12px;font-weight:700;white-space:nowrap;}
+    .price-card h3{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:8px;}
+    .price-num{font-family:'Syne',sans-serif;font-size:44px;font-weight:900;color:var(--y);line-height:1;margin-bottom:6px;}
+    .price-num span{font-size:16px;color:var(--g);font-family:'DM Sans',sans-serif;font-weight:400;}
+    .price-desc{color:var(--g);font-size:13px;margin-bottom:22px;}
+    .price-feats{list-style:none;margin-bottom:24px;}
+    .price-feats li{font-size:14px;color:var(--g2);padding:6px 0;border-bottom:1px solid var(--b3);display:flex;align-items:center;gap:8px;}
+    .price-feats li:last-child{border-bottom:none;}
+    .price-feats li::before{content:'✓';color:var(--y);font-weight:700;}
+    .btn-price{width:100%;background:var(--y);color:var(--b);border:none;padding:13px;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;}
+    .btn-price:hover{background:var(--yl);}
+    .btn-price.outline{background:transparent;border:1px solid var(--b4);color:var(--w);}
+    .btn-price.outline:hover{border-color:var(--y);color:var(--y);background:transparent;}
+
+    /* features */
+    .features{padding:80px 5%;max-width:1000px;margin:0 auto;}
+    .features h2{font-family:'Syne',sans-serif;font-size:clamp(26px,4vw,40px);font-weight:900;letter-spacing:-1px;margin-bottom:10px;}
+    .features .sub{color:var(--g);font-size:15px;margin-bottom:48px;}
+    .feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;}
+    .feat-card{background:var(--b1);border:1px solid var(--b3);border-radius:14px;padding:26px;transition:.3s;}
+    .feat-card:hover{border-color:rgba(255,214,0,.25);transform:translateY(-3px);}
+    .feat-ic{width:46px;height:46px;background:rgba(255,214,0,.1);border:1px solid rgba(255,214,0,.18);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px;}
+    .feat-card h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:7px;}
+    .feat-card p{color:var(--g);font-size:13px;line-height:1.65;}
+
+    /* faq */
+    .faq{padding:70px 5%;max-width:760px;margin:0 auto;}
+    .faq h2{font-family:'Syne',sans-serif;font-size:clamp(26px,4vw,38px);font-weight:900;letter-spacing:-1px;margin-bottom:36px;}
+    .faq-item{border:1px solid var(--b3);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+    .faq-item.open{border-color:rgba(255,214,0,.3);}
+    .faq-q{width:100%;background:var(--b1);border:none;color:var(--w);text-align:left;padding:17px 20px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;transition:.2s;}
+    .faq-q:hover{background:rgba(255,214,0,.04);}
+    .faq-arr{width:22px;height:22px;background:rgba(255,214,0,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--y);font-size:11px;flex-shrink:0;transition:transform .3s;}
+    .faq-item.open .faq-arr{transform:rotate(180deg);}
+    .faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease;}
+    .faq-item.open .faq-a{max-height:200px;}
+    .faq-a-inner{padding:0 20px 16px;color:var(--g);font-size:14px;line-height:1.7;border-top:1px solid var(--b3);padding-top:14px;}
+    .faq-a-inner code{background:var(--b2);color:var(--y);padding:1px 5px;border-radius:3px;font-size:12px;}
+
+    /* footer */
+    footer{background:var(--b);border-top:1px solid var(--b3);padding:56px 5% 28px;}
+    .footer-in{max-width:1000px;margin:0 auto;}
+    .footer-top{display:grid;grid-template-columns:2fr repeat(3,1fr);gap:40px;margin-bottom:44px;}
+    .footer-brand p{color:var(--g);font-size:14px;margin-top:12px;max-width:240px;line-height:1.6;}
+    .footer-col h4{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--g);margin-bottom:16px;}
+    .footer-col ul{list-style:none;}
+    .footer-col li{margin-bottom:9px;}
+    .footer-col a{color:var(--g2);text-decoration:none;font-size:14px;transition:.2s;}
+    .footer-col a:hover{color:var(--y);}
+    .footer-bot{border-top:1px solid var(--b3);padding-top:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+    .footer-bot p{color:var(--g);font-size:13px;}
+    .footer-x{color:var(--g);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px;transition:.2s;}
+    .footer-x:hover{color:var(--y);}
+
+    /* toast */
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--b2);border:1px solid rgba(255,214,0,.3);color:var(--w);padding:13px 20px;border-radius:10px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);transform:translateY(80px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);z-index:9999;}
+    .toast.show{transform:translateY(0);opacity:1;}
+    .toast-ic{width:22px;height:22px;background:var(--y);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--b);font-size:11px;font-weight:800;flex-shrink:0;}
+
+    @keyframes fadeUp{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
+
+    @media(max-width:768px){
+      .n-links{display:none;}
+      .footer-top{grid-template-columns:1fr 1fr;}
+    }
+    @media(max-width:480px){
+      .footer-top{grid-template-columns:1fr;}
+      .stats-row{grid-template-columns:1fr 1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     LOGIN MODAL
+════════════════════════════════════════════ -->
+<div class="overlay" id="loginOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('loginOverlay')">✕</button>
+    <div class="modal-logo">
+      <div class="icon">P</div>
+      <span>Pdfly<em>.ai</em></span>
+    </div>
+    <h2>Welcome back</h2>
+    <p class="sub">Sign in to your account to continue</p>
+
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="you@example.com"/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPass" placeholder="••••••••"/>
+    </div>
+    <div class="forgot-link"><a href="#">Forgot password?</a></div>
+    <button class="btn-primary" onclick="handleLogin()">Sign In</button>
+
+    <div class="divider">or</div>
+    <button class="btn-google" onclick="handleGoogleLogin()">
+      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+
+    <div class="modal-switch">Don't have an account? <a href="#" onclick="switchModal('loginOverlay','signupOverlay')">Sign up free</a></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SIGNUP MODAL
+════════════════════════════════════════════ -->
+<div class="overlay" id="signupOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('signupOverlay')">✕</button>
+    <div class="modal-logo">
+      <div class="icon">P</div>
+      <span>Pdfly<em>.ai</em></span>
+    </div>
+    <h2>Create account</h2>
+    <p class="sub">Join thousands of students using Pdfly.ai</p>
+
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" id="signupName" placeholder="John Doe"/>
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="signupEmail" placeholder="you@example.com"/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="signupPass" placeholder="Min. 8 characters"/>
+    </div>
+    <button class="btn-primary" onclick="handleSignup()">Create Account</button>
+
+    <div class="divider">or</div>
+    <button class="btn-google" onclick="handleGoogleLogin()">
+      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+
+    <div class="modal-switch">Already have an account? <a href="#" onclick="switchModal('signupOverlay','loginOverlay')">Sign in</a></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAYMENT MODAL
+════════════════════════════════════════════ -->
+<div class="overlay" id="paymentOverlay">
+  <div class="modal" style="max-width:480px;">
+    <button class="modal-close" onclick="closeModal('paymentOverlay')">✕</button>
+    <div class="modal-logo">
+      <div class="icon">P</div>
+      <span>Pdfly<em>.ai</em></span>
+    </div>
+    <h2>Get More Downloads</h2>
+    <p class="sub">One-time payment. Instant access.</p>
+
+    <div class="payment-plan">
+      <div class="plan-row">
+        <span class="plan-name">PDF Pack</span>
+        <span class="plan-price">$2<span> / 5 PDFs</span></span>
+      </div>
+      <ul class="plan-features">
+        <li>5 PDF downloads</li>
+        <li>Markdown formatting support</li>
+        <li>A4 optimized output</li>
+        <li>Download history saved</li>
+        <li>No subscription, pay as you go</li>
+      </ul>
+    </div>
+
+    <!-- Card UI (Stripe will replace this) -->
+    <div class="form-group">
+      <label>Card Number</label>
+      <div class="card-field">
+        <span>•••• •••• •••• ••••</span>
+        <div class="card-icons">
+          <span class="card-icon">VISA</span>
+          <span class="card-icon">MC</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label>Expiry</label>
+        <input type="text" placeholder="MM / YY"/>
+      </div>
+      <div class="form-group">
+        <label>CVC</label>
+        <input type="text" placeholder="•••"/>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="handlePayment()" style="margin-top:8px;">
+      Pay $2.00 — Get 5 PDFs
+    </button>
+
+    <div class="secure-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      Secured by Stripe. We never store card details.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     DASHBOARD PAGE
+════════════════════════════════════════════ -->
+<div id="dashboardPage">
+  <nav class="dash-nav">
+    <a href="#" class="dash-logo">
+      <div class="icon">P</div>
+      <span>Pdfly<em>.ai</em></span>
+    </a>
+    <div class="dash-user">
+      <div class="user-avatar" id="userAvatar">J</div>
+      <span class="user-name" id="userName">John Doe</span>
+      <button class="btn-logout" onclick="handleLogout()">Log out</button>
+    </div>
+  </nav>
+
+  <div class="dash-body">
+    <div class="dash-greeting">
+      <h1>Good to see you, <span id="greetName" style="color:var(--y)">John</span> 👋</h1>
+      <p>Convert your text to PDF — fast, private, and clean.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Downloads Left</div>
+        <div class="stat-value"><span id="dlLeft">5</span> / <span id="dlTotal">5</span></div>
+        <div class="stat-note">Reset when you buy a new pack</div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="dlProgress" style="width:100%"></div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total PDFs Created</div>
+        <div class="stat-value" id="totalCreated">0</div>
+        <div class="stat-note">Since you joined</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Account Status</div>
+        <div class="stat-value" style="font-size:20px;margin-top:4px;">
+          <span id="accountStatus" style="color:var(--y);">Free</span>
+        </div>
+        <div class="stat-note" id="accountNote">Buy a pack to get started</div>
+      </div>
+    </div>
+
+    <!-- Converter -->
+    <div style="position:relative;">
+      <div class="dash-converter">
+        <div class="dash-conv-header">
+          <h3>Text to PDF Converter</h3>
+          <span class="badge-free" id="packBadge">0 Credits Left</span>
+        </div>
+        <textarea id="dashTextarea" placeholder="# Your Title&#10;&#10;Start typing or paste your content here...&#10;&#10;**bold** and *italic* are supported."></textarea>
+        <div class="dash-conv-footer">
+          <div class="format-chips">
+            <span class="chip"># H1</span>
+            <span class="chip">## H2</span>
+            <span class="chip">**bold**</span>
+            <span class="chip">*italic*</span>
+          </div>
+          <button class="btn-dl" id="dashDlBtn" onclick="dashDownload()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download PDF
+          </button>
+        </div>
+      </div>
+      <!-- Locked overlay -->
+      <div class="locked-overlay" id="lockedOverlay">
+        <div class="lock-icon">🔒</div>
+        <h3>No Credits Left</h3>
+        <p>You've used all your PDF downloads. Get a new pack for just $2.</p>
+        <button class="btn-unlock" onclick="openModal('paymentOverlay')">Get 5 More PDFs — $2</button>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div class="history-section" style="margin-top:36px;">
+      <h3>Download History</h3>
+      <div class="history-list" id="historyList">
+        <div style="color:var(--g);font-size:14px;padding:20px 0;">No PDFs generated yet. Create your first one above!</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN WEBSITE
+════════════════════════════════════════════ -->
+<div id="mainSite">
+  <!-- Navbar -->
+  <nav>
+    <a href="#" class="n-logo">
+      <div class="icon">P</div>
+      <span>Pdfly<em>.ai</em></span>
+    </a>
+    <ul class="n-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <div class="n-actions">
+      <button class="btn-nav-login" onclick="openModal('loginOverlay')">Log in</button>
+      <button class="btn-nav-join" onclick="openModal('signupOverlay')">Sign up free</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="badge">✦ Free & Private — No Signup Needed</div>
+    <h1 class="hero-title">Convert <em>Text</em><br>to PDF</h1>
+    <p class="hero-sub">Paste or type text and download a PDF file instantly. Works in your browser — nothing is uploaded.</p>
+    <p class="hero-supports">Supports: <code>#, ##, ###</code> headings · <code>**bold**</code> · <code>*italic*</code></p>
+  </section>
+
+  <!-- Converter -->
+  <div class="conv-wrap">
+    <div class="conv-box">
+      <div class="conv-top">
+        <div class="dots"><span class="d1"></span><span class="d2"></span><span class="d3"></span></div>
+        <span class="conv-label">document.txt</span>
+        <span id="charCt">0 chars</span>
+      </div>
+      <textarea id="mainTextarea" placeholder="# Your Heading&#10;&#10;Type or paste your content here...&#10;&#10;**bold text** and *italic text* are supported.&#10;&#10;Everything is processed locally in your browser."></textarea>
+      <div class="conv-bot">
+        <div class="hint-chips">
+          <span class="hchip"># H1</span>
+          <span class="hchip">## H2</span>
+          <span class="hchip">### H3</span>
+          <span class="hchip">**bold**</span>
+          <span class="hchip">*italic*</span>
+        </div>
+        <button class="btn-main-dl" onclick="mainDownload()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download PDF
+        </button>
+      </div>
+    </div>
+    <p style="text-align:center;color:var(--g);font-size:13px;margin-top:14px;">
+      Want to save history & more downloads? <a href="#" onclick="openModal('signupOverlay')" style="color:var(--y);text-decoration:none;font-weight:600;">Create a free account →</a>
+    </p>
+  </div>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <div class="badge" style="display:inline-flex;margin-bottom:16px;">Why Pdfly.ai?</div>
+    <h2>Everything you need, nothing you don't</h2>
+    <p class="sub">Built for students and academics who need clean, fast, private PDF creation.</p>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-ic">⚡</div>
+        <h3>Instant & Private</h3>
+        <p>100% browser-based. Your text never touches a server. Convert in milliseconds.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ic">📝</div>
+        <h3>Markdown Support</h3>
+        <p>Headings, bold, italic — all supported. Write structured documents with ease.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ic">📄</div>
+        <h3>Clean A4 Output</h3>
+        <p>Auto-wrapping, proper margins, and page breaks. Print-ready every time.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ic">📊</div>
+        <h3>Download History</h3>
+        <p>Signed-in users get a full history of all PDFs created. Never lose a document.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ic">💳</div>
+        <h3>Pay As You Go</h3>
+        <p>No subscription. Just $2 for 5 PDFs. Buy only what you need, when you need it.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ic">📱</div>
+        <h3>Works Everywhere</h3>
+        <p>Mobile, tablet, desktop — any modern browser. No app to download.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="pricing" id="pricing">
+    <div class="badge" style="display:inline-flex;margin-bottom:16px;">Simple Pricing</div>
+    <h2>No subscriptions. Ever.</h2>
+    <p class="sub">Start free, pay only when you need more downloads.</p>
+    <div class="pricing-cards">
+      <div class="price-card">
+        <h3>Free</h3>
+        <div class="price-num">$0<span> forever</span></div>
+        <p class="price-desc">For casual use without an account</p>
+        <ul class="price-feats">
+          <li>Unlimited conversions</li>
+          <li>Basic markdown support</li>
+          <li>Browser-based, private</li>
+          <li style="color:var(--g);text-decoration:line-through;">No download history</li>
+          <li style="color:var(--g);text-decoration:line-through;">No saved files</li>
+        </ul>
+        <button class="btn-price outline" onclick="scrollToConverter()">Use for free</button>
+      </div>
+      <div class="price-card featured">
+        <div class="featured-tag">⭐ Most Popular</div>
+        <h3>PDF Pack</h3>
+        <div class="price-num">$2<span> / 5 PDFs</span></div>
+        <p class="price-desc">One-time. No subscription. Buy anytime.</p>
+        <ul class="price-feats">
+          <li>5 PDF downloads</li>
+          <li>Full markdown formatting</li>
+          <li>Download history</li>
+          <li>Account dashboard</li>
+          <li>Buy more packs anytime</li>
+        </ul>
+        <button class="btn-price" onclick="openPaymentFlow()">Get Started — $2</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq" id="faq">
+    <h2>Frequently Asked Questions</h2>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">Is this tool completely free? <span class="faq-arr">▼</span></button>
+      <div class="faq-a"><div class="faq-a-inner">Yes — the basic converter is 100% free with no limits. For download history and saved files, you need an account and a $2 PDF pack.</div></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">Is my text uploaded to a server? <span class="faq-arr">▼</span></button>
+      <div class="faq-a"><div class="faq-a-inner">No. All PDF generation happens locally in your browser. Your content never leaves your device.</div></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">What formatting is supported? <span class="faq-arr">▼</span></button>
+      <div class="faq-a"><div class="faq-a-inner">Headings (<code>#</code>, <code>##</code>, <code>###</code>), bold (<code>**text**</code>), and italic (<code>*text*</code>). Line breaks are preserved automatically.</div></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">What happens when I run out of credits? <span class="faq-arr">▼</span></button>
+      <div class="faq-a"><div class="faq-a-inner">Simply buy another $2 pack to get 5 more downloads. There's no subscription — you only pay when you need more.</div></div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">Does it work on mobile? <span class="faq-arr">▼</span></button>
+      <div class="faq-a"><div class="faq-a-inner">Yes! Pdfly.ai works on all modern browsers — Chrome, Safari, Firefox, Edge — on any device.</div></div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-in">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a href="#" class="n-logo" style="text-decoration:none;">
+            <div class="icon" style="width:34px;height:34px;font-size:15px;">P</div>
+            <span>Pdfly<em>.ai</em></span>
+          </a>
+          <p>Fast, private, browser-based PDF conversion for students and academics worldwide.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="#" onclick="openModal('signupOverlay')">Sign up free</a></li>
+            <li><a href="#" onclick="openModal('loginOverlay')">Log in</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Tools</h4>
+          <ul>
+            <li><a href="#">Text to PDF</a></li>
+            <li><a href="#">PDF to Text</a></li>
+            <li><a href="#">PDF Merger</a></li>
+            <li><a href="#">PDF Splitter</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">Terms</a></li>
+            <li><a href="#">Privacy</a></li>
+            <li><a href="#">Contact</a></li>
+            <li><a href="#">Feedback</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bot">
+        <p>© 2025 Pdfly.ai. All rights reserved.</p>
+        <a href="#" class="footer-x">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          Follow @PdflyAI on 𝕏
+        </a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-ic" id="toastIc">✓</div>
+  <span id="toastMsg">Done!</span>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// APP STATE (Replace with Firebase later)
+// ═══════════════════════════════════════
+let appState = {
+  isLoggedIn: false,
+  user: null,
+  credits: 0,
+  totalCreated: 0,
+  history: []
+};
+
+// ── MODAL HELPERS ──
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+  document.body.style.overflow = '';
+}
+function switchModal(from, to) {
+  closeModal(from);
+  setTimeout(() => openModal(to), 150);
+}
+document.querySelectorAll('.overlay').forEach(el => {
+  el.addEventListener('click', e => { if(e.target === el) closeModal(el.id); });
+});
+
+// ── AUTH HANDLERS ──
+// TODO: Replace with Firebase Auth
+function handleLogin() {
+  const email = document.getElementById('loginEmail').value;
+  const pass = document.getElementById('loginPass').value;
+  if (!email || !pass) { showToast('Please fill in all fields', true); return; }
+
+  // FIREBASE INTEGRATION POINT:
+  // firebase.auth().signInWithEmailAndPassword(email, pass)
+  //   .then(user => loginSuccess(user))
+  //   .catch(err => showToast(err.message, true));
+
+  // Demo login:
+  const name = email.split('@')[0];
+  loginSuccess({ name: name, email: email });
+}
+
+function handleSignup() {
+  const name = document.getElementById('signupName').value;
+  const email = document.getElementById('signupEmail').value;
+  const pass = document.getElementById('signupPass').value;
+  if (!name || !email || !pass) { showToast('Please fill in all fields', true); return; }
+  if (pass.length < 8) { showToast('Password must be at least 8 characters', true); return; }
+
+  // FIREBASE INTEGRATION POINT:
+  // firebase.auth().createUserWithEmailAndPassword(email, pass)
+  //   .then(cred => cred.user.updateProfile({ displayName: name }))
+  //   .then(() => loginSuccess({ name, email }))
+  //   .catch(err => showToast(err.message, true));
+
+  loginSuccess({ name, email });
+}
+
+function handleGoogleLogin() {
+  // FIREBASE INTEGRATION POINT:
+  // const provider = new firebase.auth.GoogleAuthProvider();
+  // firebase.auth().signInWithPopup(provider)
+  //   .then(result => loginSuccess(result.user))
+  //   .catch(err => showToast(err.message, true));
+
+  loginSuccess({ name: 'Google User', email: 'user@gmail.com' });
+}
+
+function loginSuccess(user) {
+  appState.isLoggedIn = true;
+  appState.user = user;
+  appState.credits = 0; // Load from Firestore in real app
+
+  closeModal('loginOverlay');
+  closeModal('signupOverlay');
+  showToast('Welcome, ' + user.name.split(' ')[0] + '! 🎉');
+  setTimeout(() => showDashboard(), 600);
+}
+
+function handleLogout() {
+  // FIREBASE: firebase.auth().signOut()
+  appState.isLoggedIn = false;
+  appState.user = null;
+  document.getElementById('dashboardPage').classList.remove('active');
+  document.getElementById('mainSite').style.display = 'block';
+  showToast('Logged out successfully');
+}
+
+// ── DASHBOARD ──
+function showDashboard() {
+  document.getElementById('mainSite').style.display = 'none';
+  const dash = document.getElementById('dashboardPage');
+  dash.classList.add('active');
+
+  const firstName = appState.user.name.split(' ')[0];
+  document.getElementById('greetName').textContent = firstName;
+  document.getElementById('userName').textContent = appState.user.name;
+  document.getElementById('userAvatar').textContent = firstName[0].toUpperCase();
+  updateDashStats();
+}
+
+function updateDashStats() {
+  const c = appState.credits;
+  const total = appState.totalCreated;
+  document.getElementById('dlLeft').textContent = c;
+  document.getElementById('dlTotal').textContent = Math.max(c, 5);
+  document.getElementById('totalCreated').textContent = total;
+  document.getElementById('dlProgress').style.width = (c / 5 * 100) + '%';
+  document.getElementById('packBadge').textContent = c + ' Credit' + (c !== 1 ? 's' : '') + ' Left';
+
+  if (c > 0) {
+    document.getElementById('lockedOverlay').classList.remove('show');
+    document.getElementById('accountStatus').textContent = 'Active';
+    document.getElementById('accountNote').textContent = c + ' PDFs remaining';
+  } else {
+    document.getElementById('lockedOverlay').classList.add('show');
+    document.getElementById('accountStatus').textContent = 'Free';
+    document.getElementById('accountNote').textContent = 'Buy a pack to get started';
+  }
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (appState.history.length === 0) {
+    list.innerHTML = '<div style="color:var(--g);font-size:14px;padding:20px 0;">No PDFs generated yet. Create your first one above!</div>';
+    return;
+  }
+  list.innerHTML = appState.history.map((item, i) => `
+    <div class="history-item">
+      <div class="hist-info">
+        <div class="hist-icon">📄</div>
+        <div>
+          <div class="hist-name">${item.name}</div>
+          <div class="hist-date">${item.date}</div>
+        </div>
+      </div>
+      <button class="hist-dl" onclick="reDownload(${i})">Re-download</button>
+    </div>
+  `).join('');
+}
+
+// ── PAYMENT ──
+function openPaymentFlow() {
+  if (!appState.isLoggedIn) {
+    openModal('signupOverlay');
+  } else {
+    openModal('paymentOverlay');
+  }
+}
+
+function handlePayment() {
+  // STRIPE INTEGRATION POINT:
+  // stripe.redirectToCheckout({ lineItems: [{ price: 'price_xxx', quantity: 1 }], mode: 'payment', ... })
+  // OR use Stripe.js with card element
+
+  closeModal('paymentOverlay');
+  showToast('Payment successful! 5 credits added 🎉');
+  appState.credits = 5;
+
+  // FIRESTORE: db.collection('users').doc(uid).update({ credits: firebase.firestore.FieldValue.increment(5) })
+
+  updateDashStats();
+}
+
+// ── PDF GENERATION ──
+async function generatePDF(text, filename) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const pW = doc.internal.pageSize.getWidth();
+  const pH = doc.internal.pageSize.getHeight();
+  const mL = 20, mR = 20, mT = 22, mB = 22;
+  const usW = pW - mL - mR;
+  let y = mT;
+  const lH = 7;
+
+  const addPage = (need = lH) => {
+    if (y + need > pH - mB) { doc.addPage(); y = mT; }
+  };
+
+  for (const raw of text.split('\n')) {
+    if (raw.startsWith('# ')) {
+      addPage(16);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(22); doc.setTextColor(0,0,0);
+      doc.splitTextToSize(raw.slice(2), usW).forEach(l => { addPage(); doc.text(l, mL, y); y += 11; });
+      y += 4;
+    } else if (raw.startsWith('## ')) {
+      addPage(13);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(10,10,10);
+      doc.splitTextToSize(raw.slice(3), usW).forEach(l => { addPage(); doc.text(l, mL, y); y += 9; });
+      y += 3;
+    } else if (raw.startsWith('### ')) {
+      addPage(10);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(20,20,20);
+      doc.splitTextToSize(raw.slice(4), usW).forEach(l => { addPage(); doc.text(l, mL, y); y += 7.5; });
+      y += 2;
+    } else if (raw === '') {
+      y += 4;
+    } else {
+      doc.setFontSize(11); doc.setTextColor(40,40,40);
+      const isBold = /^\*\*(.+)\*\*$/.test(raw.trim());
+      const isItalic = /^\*(.+)\*$/.test(raw.trim());
+      doc.setFont('helvetica', isBold ? 'bold' : isItalic ? 'italic' : 'normal');
+      const clean = raw.replace(/\*\*(.+?)\*\*/g,'$1').replace(/\*(.+?)\*/g,'$1').replace(/_(.+?)_/g,'$1');
+      doc.splitTextToSize(clean, usW).forEach(l => { addPage(); doc.text(l, mL, y); y += lH; });
+    }
+  }
+  doc.save(filename);
+}
+
+async function mainDownload() {
+  const text = document.getElementById('mainTextarea').value.trim();
+  if (!text) { showToast('Please enter some text first', true); return; }
+  const btn = document.querySelector('.btn-main-dl');
+  btn.textContent = 'Generating...'; btn.disabled = true;
+  try { await generatePDF(text, 'document.pdf'); showToast('PDF downloaded! ✓'); }
+  catch(e) { showToast('Error generating PDF', true); }
+  btn.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download PDF`;
+  btn.disabled = false;
+}
+
+async function dashDownload() {
+  if (appState.credits <= 0) { document.getElementById('lockedOverlay').classList.add('show'); return; }
+  const text = document.getElementById('dashTextarea').value.trim();
+  if (!text) { showToast('Please enter some text first', true); return; }
+
+  const btn = document.getElementById('dashDlBtn');
+  btn.textContent = 'Generating...'; btn.disabled = true;
+
+  try {
+    const fname = 'document-' + Date.now() + '.pdf';
+    await generatePDF(text, fname);
+    appState.credits--;
+    appState.totalCreated++;
+
+    // FIRESTORE:
+    // db.collection('users').doc(uid).update({
+    //   credits: firebase.firestore.FieldValue.increment(-1),
+    //   totalCreated: firebase.firestore.FieldValue.increment(1)
+    // })
+
+    const now = new Date();
+    appState.history.unshift({
+      name: fname,
+      date: now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      text: text
+    });
+
+    updateDashStats();
+    renderHistory();
+    showToast('PDF downloaded! ' + appState.credits + ' credits left');
+  } catch(e) {
+    showToast('Error generating PDF', true);
+  }
+
+  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download PDF`;
+  btn.disabled = false;
+}
+
+async function reDownload(i) {
+  const item = appState.history[i];
+  await generatePDF(item.text, item.name);
+  showToast('Re-downloaded: ' + item.name);
+}
+
+// ── CHAR COUNT ──
+document.getElementById('mainTextarea').addEventListener('input', function() {
+  document.getElementById('charCt').textContent = this.value.length.toLocaleString() + ' chars';
+});
+
+// ── FAQ ──
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+
+// ── TOAST ──
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  const ic = document.getElementById('toastIc');
+  document.getElementById('toastMsg').textContent = msg;
+  ic.textContent = isError ? '!' : '✓';
+  ic.style.background = isError ? '#FF5F57' : 'var(--y)';
+  ic.style.color = isError ? '#fff' : 'var(--b)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── SCROLL TO CONVERTER ──
+function scrollToConverter() {
+  document.getElementById('mainTextarea').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('mainTextarea').focus();
+}
+</script>
+</body>
+</html>
